@@ -28,9 +28,7 @@ namespace WinClient
             this.btnAdd = new System.Windows.Forms.Button();
             this.btnUpdate = new System.Windows.Forms.Button();
             this.btnDelete = new System.Windows.Forms.Button();
-            this.btnSearch = new System.Windows.Forms.Button();
             this.btnRefresh = new System.Windows.Forms.Button();
-            this.txtSearch = new System.Windows.Forms.TextBox();
             this.lblRole = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.dgvStudents)).BeginInit();
             this.grpInfo.SuspendLayout();
@@ -149,16 +147,6 @@ namespace WinClient
             this.btnDelete.UseVisualStyleBackColor = true;
             this.btnDelete.Click += new System.EventHandler(this.btnDelete_Click);
             // 
-            // btnSearch
-            // 
-            this.btnSearch.Location = new System.Drawing.Point(620, 170);
-            this.btnSearch.Name = "btnSearch";
-            this.btnSearch.Size = new System.Drawing.Size(80, 30);
-            this.btnSearch.TabIndex = 6;
-            this.btnSearch.Text = "Tìm kiếm";
-            this.btnSearch.UseVisualStyleBackColor = true;
-            this.btnSearch.Click += new System.EventHandler(this.btnSearch_Click);
-            // 
             // btnRefresh
             // 
             this.btnRefresh.Location = new System.Drawing.Point(320, 170);
@@ -168,14 +156,6 @@ namespace WinClient
             this.btnRefresh.Text = "Làm mới";
             this.btnRefresh.UseVisualStyleBackColor = true;
             this.btnRefresh.Click += new System.EventHandler(this.btnRefresh_Click);
-            // 
-            // txtSearch
-            // 
-            this.txtSearch.Location = new System.Drawing.Point(460, 174);
-            this.txtSearch.Name = "txtSearch";
-            this.txtSearch.Size = new System.Drawing.Size(150, 23);
-            this.txtSearch.TabIndex = 8;
-            this.txtSearch.PlaceholderText = "Nhập MSSV tìm...";
             // 
             // lblRole
             // 
@@ -193,9 +173,7 @@ namespace WinClient
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(784, 561);
             this.Controls.Add(this.lblRole);
-            this.Controls.Add(this.txtSearch);
             this.Controls.Add(this.btnRefresh);
-            this.Controls.Add(this.btnSearch);
             this.Controls.Add(this.btnDelete);
             this.Controls.Add(this.btnUpdate);
             this.Controls.Add(this.btnAdd);
@@ -224,9 +202,8 @@ namespace WinClient
         private System.Windows.Forms.Button btnAdd;
         private System.Windows.Forms.Button btnUpdate;
         private System.Windows.Forms.Button btnDelete;
-        private System.Windows.Forms.Button btnSearch;
         private System.Windows.Forms.Button btnRefresh;
-        private System.Windows.Forms.TextBox txtSearch;
         private System.Windows.Forms.Label lblRole;
+        private System.Windows.Forms.Button btnImport;
     }
 }

@@ -99,7 +99,6 @@ namespace WinClient
             btnUpdate.Enabled = true;
             btnDelete.Enabled = true; 
             
-            btnSearch.Enabled = enable;
             txtID.Enabled = enable;
             txtName.Enabled = enable;
             txtClass.Enabled = enable;
@@ -162,15 +161,14 @@ namespace WinClient
         {
             // 1. CẤU HÌNH FORM CHUNG
             this.Text = "QUẢN LÝ SINH VIÊN"; 
-            this.Width = 1250; 
+            this.Width = 1300; // Tăng chiều rộng tổng thể
             this.Height = 700; 
-            // Đổi theo yêu cầu cho giống Login
             this.FormBorderStyle = FormBorderStyle.FixedDialog; 
             this.MaximizeBox = false;
 
             // KHAI BÁO CÁC THÔNG SỐ KÍCH THƯỚC CHUẨN
             int LEFT_MARGIN = 20;
-            int LEFT_WIDTH = 840; 
+            int LEFT_WIDTH = 920; // Tăng không gian cho bên trái
             
             // --- NÚT MENU ---
             Button btnMenu = new Button();
@@ -199,37 +197,49 @@ namespace WinClient
 
             // --- C. HÀNG NÚT BẤM (BUTTONS ROW) ---
             int BTN_Y = 190;
-            int btnW = 100; 
+            int btnW = 100; // Trả lại 100 để không mất chữ
             int btnH = 40;   
             int gap = 10;    
 
             // Nhóm 1: Thao tác 
             btnAdd.Location     = new Point(LEFT_MARGIN, BTN_Y);
             btnAdd.Size         = new Size(btnW, btnH);
+            btnAdd.TextAlign    = ContentAlignment.MiddleCenter;
 
             btnUpdate.Location  = new Point(LEFT_MARGIN + (btnW + gap), BTN_Y);
             btnUpdate.Size      = new Size(btnW, btnH);
+            btnUpdate.TextAlign = ContentAlignment.MiddleCenter;
 
             btnDelete.Location  = new Point(LEFT_MARGIN + (btnW + gap) * 2, BTN_Y);
             btnDelete.Size      = new Size(btnW, btnH);
+            btnDelete.TextAlign = ContentAlignment.MiddleCenter;
 
             btnRefresh.Location = new Point(LEFT_MARGIN + (btnW + gap) * 3, BTN_Y);
             btnRefresh.Size     = new Size(btnW, btnH);
+            btnRefresh.TextAlign = ContentAlignment.MiddleCenter;
 
-            // Nhóm 2: Tìm kiếm 
-            btnSearch.Location  = new Point(LEFT_MARGIN + LEFT_WIDTH - btnW, BTN_Y);
-            btnSearch.Size      = new Size(btnW, btnH);
+            btnImport = new Button();
+            btnImport.Text      = "Nhập Excel";
+            btnImport.Location  = new Point(LEFT_MARGIN + (btnW + gap) * 4, BTN_Y);
+            btnImport.Size      = new Size(btnW, btnH);
+            btnImport.BackColor = Color.SeaGreen;
+            btnImport.ForeColor = Color.White;
+            btnImport.FlatStyle = FlatStyle.Flat;
+            btnImport.FlatAppearance.BorderSize = 0;
+            btnImport.Font      = new Font("Segoe UI", 9, FontStyle.Bold);
+            btnImport.TextAlign = ContentAlignment.MiddleCenter;
+            btnImport.Click    += (s, e) => ImportCSV();
+            this.Controls.Add(btnImport);
+            btnImport.BringToFront();
+
+            // Nhóm 2: Tìm kiếm (Đã chuyển sang trang Tra Cứu riêng)
             
-            txtSearch.Location  = new Point(btnSearch.Left - 210, BTN_Y + 8); 
-            txtSearch.Size      = new Size(200, 25);
-
             // Xóa Anchor 
             btnAdd.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             btnUpdate.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             btnDelete.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             btnRefresh.Anchor = AnchorStyles.Top | AnchorStyles.Left;
-            btnSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left;
-            txtSearch.Anchor = AnchorStyles.Top | AnchorStyles.Left;
+            btnImport.Anchor  = AnchorStyles.Top | AnchorStyles.Left;
 
             // --- D. BẢNG DỮ LIỆU ---
             dgvStudents.Location = new Point(LEFT_MARGIN, BTN_Y + btnH + 20); 
@@ -327,7 +337,6 @@ namespace WinClient
             StyleButton(btnUpdate, Color.FromArgb(0, 120, 215));
             StyleButton(btnDelete, Color.Crimson);
             StyleButton(btnRefresh, Color.DarkOrange);
-            StyleButton(btnSearch, Color.Teal);
             
             StyleButton(btnSend, Color.FromArgb(0, 120, 215));
         }
@@ -436,7 +445,12 @@ namespace WinClient
             else if (msg.StartsWith("LIST_RES|"))
             {
                 if (isViewingUsers) return;
-                dtStudents.Clear();
+                
+                DataTable targetDT = dtStudents;
+                bool isSearchMode = (pnlSearchPage != null && pnlSearchPage.Visible);
+                if (isSearchMode) targetDT = (DataTable)dgvSearchResults.DataSource;
+
+                targetDT.Clear();
                 string data = msg.Substring(9); 
                 string[] rows = data.Split(';');
                 foreach (var row in rows)
@@ -444,7 +458,7 @@ namespace WinClient
                     if (string.IsNullOrWhiteSpace(row)) continue;
                     string[] parts = row.Split('#');
                     if (parts.Length == 3)
-                        dtStudents.Rows.Add(parts[0], parts[1], parts[2]);
+                        targetDT.Rows.Add(parts[0], parts[1], parts[2]);
                 }
             }
             else if (msg == "ADD_SUCCESS") { LogSystem("Bạn vừa thêm thành công."); ClearInputs(); }
@@ -457,7 +471,19 @@ namespace WinClient
                 dtStudents.Clear();
                 dtStudents.Rows.Add(p[1], p[2], p[3]); 
             }
-            else if (msg == "STUDENT_NOT_FOUND") MessageBox.Show("Không tìm thấy sinh viên!");
+            else if (msg == "STUDENT_NOT_FOUND")
+            {
+                if (pnlSearchPage != null && pnlSearchPage.Visible)
+                {
+                    DataTable dt = (DataTable)dgvSearchResults.DataSource;
+                    if (dt != null) dt.Clear();
+                    LogSystem("Tra cứu: Không tìm thấy kết quả nào.");
+                }
+                else
+                {
+                    MessageBox.Show("Không tìm thấy sinh viên!");
+                }
+            }
         }
 
         private void LogSystem(string content)
@@ -499,18 +525,84 @@ namespace WinClient
             LogSystem("Đã làm mới danh sách.");
         }
 
+        private void ImportCSV()
+        {
+            OpenFileDialog open = new OpenFileDialog();
+            open.Filter = "CSV Files (*.csv)|*.csv|Text Files (*.txt)|*.txt";
+            open.Title = "Chọn file dữ liệu sinh viên";
+
+            if (open.ShowDialog() == DialogResult.OK)
+            {
+                try
+                {
+                    string[] lines = File.ReadAllLines(open.FileName);
+                    int count = 0;
+                    int success = 0;
+
+                    foreach (string line in lines)
+                    {
+                        if (string.IsNullOrWhiteSpace(line)) continue;
+                        count++;
+                        
+                        // Định dạng: MSSV, HoTen, Lop
+                        string[] parts = line.Split(',');
+                        if (parts.Length >= 2)
+                        {
+                            string id = parts[0].Trim();
+                            if (!id.StartsWith("SV")) id = "SV" + id;
+                            
+                            string name = parts[1].Trim();
+                            string cls = parts.Length > 2 ? parts[2].Trim() : "";
+
+                            // Validation tương tự nút Thêm
+                            if (!IsAlphanumeric(id) || !IsAlphanumeric(name, true) || !IsAlphanumeric(cls))
+                            {
+                                LogSystem($"Lỗi dòng {count}: Ký tự không hợp lệ ({id})");
+                                continue; 
+                            }
+
+                            SocketClient.Send($"ADD|{id}|{name}|{cls}");
+                            success++;
+                            
+                            // Nghỉ 5ms để tránh dính gói tin (TCP Sticky Packets)
+                            System.Threading.Thread.Sleep(5); 
+                        }
+                    }
+
+                    MessageBox.Show($"Đã đọc {count} dòng. Gửi thành công {success} lệnh nhập liệu.", "Kết quả Import");
+                    if (isViewingUsers) SocketClient.Send("LIST_USERS");
+                    else SocketClient.Send("LIST");
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show("Lỗi khi đọc file: " + ex.Message);
+                }
+            }
+        }
+
         private void btnAdd_Click(object sender, EventArgs e)
         {
             if (!txtID.Enabled) { MessageBox.Show("Vui lòng bấm 'Làm mới'."); return; }
             if (isViewingUsers) return;
 
             string id = txtID.Text.Trim();
-            if (!id.StartsWith("SV")) id = "SV" + id;
             string name = txtName.Text.Trim();
             string cls = txtClass.Text.Trim();
 
-            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(name)) return;
+            if (string.IsNullOrEmpty(id) || string.IsNullOrEmpty(name))
+            {
+                MessageBox.Show("Vui lòng nhập đầy đủ thông tin!");
+                return;
+            }
 
+            // Chặn ký tự đặc biệt
+            if (!IsAlphanumeric(id) || !IsAlphanumeric(name, true) || !IsAlphanumeric(cls))
+            {
+                MessageBox.Show("Dữ liệu chỉ chấp nhận chữ cái (a-z) và số (0-9). Vui lòng kiểm tra lại!", "Lỗi nhập liệu");
+                return;
+            }
+
+            if (!id.StartsWith("SV")) id = "SV" + id;
             SocketClient.Send($"ADD|{id}|{name}|{cls}");
         }
 
@@ -572,6 +664,14 @@ namespace WinClient
             string id = txtID.Text.Trim();
             string name = txtName.Text.Trim();
             string cls = txtClass.Text.Trim();
+
+            // Chặn ký tự đặc biệt
+            if (!IsAlphanumeric(name, true) || !IsAlphanumeric(cls))
+            {
+                MessageBox.Show("Dữ liệu chỉ chấp nhận chữ cái (a-z) và số (0-9). Vui lòng kiểm tra lại!", "Lỗi nhập liệu");
+                return;
+            }
+
             SocketClient.Send($"UPDATE|{id}|{name}|{cls}");
         }
 
@@ -605,14 +705,7 @@ namespace WinClient
                 SocketClient.Send($"DELETE|{target}");
         }
 
-        private void btnSearch_Click(object sender, EventArgs e)
-        {
-            if (isViewingUsers) return;
-            string k = txtSearch.Text.Trim();
-            if (string.IsNullOrEmpty(k)) return;
-            if (!k.StartsWith("SV")) k = "SV" + k;
-            SocketClient.Send($"SEARCH|{k}");
-        }
+
 
         private void dgvStudents_CellClick(object sender, DataGridViewCellEventArgs e)
         {
@@ -645,6 +738,19 @@ namespace WinClient
             txtID.Enabled = true;
         }
 
+        private bool IsAlphanumeric(string str, bool allowSpace = false)
+        {
+            if (string.IsNullOrEmpty(str)) return true;
+            foreach (char c in str)
+            {
+                // Cho phép chữ cái (bao gồm có dấu), chữ số, và dấu cách (nếu allowSpace=true)
+                if (char.IsLetterOrDigit(c)) continue;
+                if (allowSpace && c == ' ') continue;
+                return false;
+            }
+            return true;
+        }
+
         protected override void OnFormClosing(FormClosingEventArgs e)
         {
             isListening = false;
@@ -653,11 +759,104 @@ namespace WinClient
 
         // --- USER INFO PAGE ---
         private Panel pnlUserInfo;
+        private Panel pnlSearchPage;
+        private DataGridView dgvSearchResults;
 
         private void ShowDashboard()
         {
             if (pnlUserInfo != null) pnlUserInfo.Visible = false;
-            ToggleSidebar(); // Đóng menu
+            if (pnlSearchPage != null) pnlSearchPage.Visible = false;
+            if (isSidebarOpen) ToggleSidebar(); // Đóng menu nếu đang mở
+        }
+
+        private void ShowSearchPage()
+        {
+            ToggleSidebar();
+            isViewingUsers = false; // QUAN TRỌNG: Chuyển về chế độ SV để nhận dữ liệu LIST_RES
+
+            if (pnlSearchPage == null)
+            {
+                pnlSearchPage = new Panel();
+                pnlSearchPage.Location = new Point(0, 0);
+                pnlSearchPage.Size = this.ClientSize;
+                pnlSearchPage.BackColor = Color.FromArgb(245, 247, 251);
+                pnlSearchPage.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+
+                // 1. Header
+                Panel head = new Panel() { Dock = DockStyle.Top, Height = 60, BackColor = Color.White };
+                pnlSearchPage.Controls.Add(head);
+                Label title = new Label() { Text = "TRA CỨU & LỌC SINH VIÊN", Font = new Font("Segoe UI", 16, FontStyle.Bold), ForeColor = Color.FromArgb(0, 120, 215), Location = new Point(20, 15), AutoSize = true };
+                head.Controls.Add(title);
+
+                // 2. Filter Area
+                Panel filterArea = new Panel() { Location = new Point(20, 80), Size = new Size(pnlSearchPage.Width - 40, 100), BackColor = Color.White, Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right };
+                pnlSearchPage.Controls.Add(filterArea);
+
+                Label l1 = new Label() { Text = "Lọc theo lớp:", Location = new Point(20, 20), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+                ComboBox cbClasses = new ComboBox() { Location = new Point(20, 45), Width = 200, DropDownStyle = ComboBoxStyle.DropDownList, Font = new Font("Segoe UI", 10) };
+                cbClasses.Items.AddRange(new string[] { "TẤT CẢ", "CNTT", "CNTT1", "CNTT2", "QTKD", "QTKD1", "QTKD2", "DIEN1", "COKHI1" });
+                cbClasses.SelectedIndex = 0;
+                filterArea.Controls.Add(l1);
+                filterArea.Controls.Add(cbClasses);
+
+                Label l2 = new Label() { Text = "Tìm kiếm tổng hợp (Tên/Mã/Lớp):", Location = new Point(250, 20), AutoSize = true, Font = new Font("Segoe UI", 9, FontStyle.Bold) };
+                TextBox tSearch = new TextBox() { Location = new Point(250, 45), Width = 300, Font = new Font("Segoe UI", 10), PlaceholderText = "Ví dụ: SV001 hoặc Nguyen Van A..." };
+                filterArea.Controls.Add(l2);
+                filterArea.Controls.Add(tSearch);
+
+                Button bFind = new Button() { Text = "TRA CỨU", Location = new Point(570, 40), Size = new Size(120, 35), BackColor = Color.FromArgb(0, 120, 215), ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Font = new Font("Segoe UI", 10, FontStyle.Bold) };
+                bFind.FlatAppearance.BorderSize = 0;
+                filterArea.Controls.Add(bFind);
+
+                // Event Logic
+                cbClasses.SelectedIndexChanged += (s, e) => {
+                    if (dgvSearchResults.DataSource is DataTable dt) dt.Clear();
+
+                    if (cbClasses.SelectedIndex <= 0) SocketClient.Send("LIST"); // <= 0 covers ANY failure or TẤT CẢ
+                    else SocketClient.Send($"SEARCH|CLASS|{cbClasses.SelectedItem.ToString()}");
+                };
+
+                bFind.Click += (s, e) => {
+                    string k = tSearch.Text.Trim();
+                    if (string.IsNullOrEmpty(k)) return;
+                    
+                    DataTable dt = (DataTable)dgvSearchResults.DataSource;
+                    if (dt != null) dt.Clear();
+
+                    SocketClient.Send($"SEARCH|ALL|{k}");
+                };
+
+                // 3. Grid Results
+                dgvSearchResults = new DataGridView();
+                dgvSearchResults.Location = new Point(20, 200);
+                dgvSearchResults.Size = new Size(pnlSearchPage.Width - 40, pnlSearchPage.Height - 400); // Điều chỉnh lại size
+                dgvSearchResults.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+                dgvSearchResults.BackgroundColor = Color.White;
+                dgvSearchResults.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill;
+                dgvSearchResults.AllowUserToAddRows = false;
+                dgvSearchResults.ReadOnly = true;
+                pnlSearchPage.Controls.Add(dgvSearchResults);
+
+                // Setup Columns
+                DataTable dtInitial = new DataTable();
+                dtInitial.Columns.Add("MSSV");
+                dtInitial.Columns.Add("Họ Tên");
+                dtInitial.Columns.Add("Lớp");
+                dgvSearchResults.DataSource = dtInitial;
+
+                // 4. Back Button
+                Button bBack = new Button() { Text = "QUAY LẠI", Location = new Point(20, pnlSearchPage.Height - 60), Size = new Size(120, 40), BackColor = Color.Gray, ForeColor = Color.White, FlatStyle = FlatStyle.Flat, Anchor = AnchorStyles.Bottom | AnchorStyles.Left };
+                bBack.Click += (s, e) => ShowDashboard();
+                pnlSearchPage.Controls.Add(bBack);
+
+                this.Controls.Add(pnlSearchPage);
+            }
+            pnlSearchPage.Visible = true;
+            pnlSearchPage.BringToFront();
+            pnlSidebar.BringToFront();
+
+            // Tự động load toàn bộ khi vừa mở trang
+            SocketClient.Send("LIST"); 
         }
 
         private void ShowUserInfo()
@@ -799,9 +998,13 @@ namespace WinClient
 
             // Adding Items
             int top = 80;
-            AddSidebarItem("Trang Chủ (Sinh Viên)", top, (s, e) => { 
+            AddSidebarItem("Trang Chủ (Quản Lý)", top, (s, e) => { 
                 ShowDashboard();
-                if (isViewingUsers) BtnViewUsers_Click(null, null); // Quay về xem SV nêú đang xem User
+                if (isViewingUsers) BtnViewUsers_Click(null, null); 
+            }); top += 50;
+
+            AddSidebarItem("Tra Cứu & Lọc", top, (s, e) => { 
+                ShowSearchPage();
             }); top += 50;
 
             if (UserRole == "ADMIN")

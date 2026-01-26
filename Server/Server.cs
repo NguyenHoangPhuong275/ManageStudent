@@ -11,6 +11,26 @@ class Server
 {
     static string dbFile = "StudentManager.db";
     static string connStr = $"Data Source={dbFile}";
+
+    enum LogType { INFO, ERROR, SUCCESS, CMD, DATA }
+
+    static void Log(string msg, LogType type = LogType.INFO)
+    {
+        string ts = DateTime.Now.ToString("HH:mm:ss");
+        Console.Write($"[{ts}] ");
+
+        switch (type)
+        {
+            case LogType.INFO: Console.ForegroundColor = ConsoleColor.Gray; break;
+            case LogType.ERROR: Console.ForegroundColor = ConsoleColor.Red; break;
+            case LogType.SUCCESS: Console.ForegroundColor = ConsoleColor.Green; break;
+            case LogType.CMD: Console.ForegroundColor = ConsoleColor.Cyan; break;
+            case LogType.DATA: Console.ForegroundColor = ConsoleColor.Yellow; break;
+        }
+        Console.Write($"[{type}] ");
+        Console.ResetColor();
+        Console.WriteLine(msg);
+    }
     
     // Danh sách Client để Broadcast
     static List<TcpClient> clients = new List<TcpClient>();
@@ -21,13 +41,13 @@ class Server
 
         TcpListener server = new TcpListener(IPAddress.Any, 8888);
         server.Start();
-        Console.WriteLine("SERVER running on port 8888...");
-        Console.WriteLine($"Database file: {Path.GetFullPath(dbFile)}");
+        Log("SERVER running on port 8888...", LogType.SUCCESS);
+        Log($"Database file: {Path.GetFullPath(dbFile)}");
 
         while (true)
         {
             TcpClient client = server.AcceptTcpClient();
-            Console.WriteLine("Client connected");
+            Log("New client connected", LogType.INFO);
             
             lock(clients) clients.Add(client);
             
@@ -39,14 +59,14 @@ class Server
     {
         if (!File.Exists(dbFile))
         {
-            Console.WriteLine("Tao moi Database...");
+            Log("Tao moi Database...", LogType.INFO);
         }
 
         using (var conn = new SqliteConnection(connStr))
         {
             conn.Open();
 
-            // Tạo bảng Users
+            // 1. Tạo bảng Users
             string tblUsers = @"
                 CREATE TABLE IF NOT EXISTS Users (
                     Username TEXT PRIMARY KEY,
@@ -60,24 +80,38 @@ class Server
             // Sửa lỗi thiếu cột cho DB cũ (Migration)
             try { new SqliteCommand("ALTER TABLE Users ADD COLUMN FullName TEXT", conn).ExecuteNonQuery(); } catch { }
 
-            string initData = @"
-                INSERT OR IGNORE INTO Users VALUES ('admin@admin.edu.vn', 'admin123', 'ADMIN', 'Quản Trị Viên');
-                INSERT OR IGNORE INTO Users VALUES ('gv01@school.edu.vn', '123', 'USER', 'Nguyễn Văn A');
-            ";
-            new SqliteCommand(initData, conn).ExecuteNonQuery();
+            // Chỉ nạp Admin và Giáo viên mẫu nếu bảng trống
+            var checkUserCmd = new SqliteCommand("SELECT COUNT(*) FROM Users", conn);
+            if ((long)checkUserCmd.ExecuteScalar() == 0)
+            {
+                Log("Bảng Users trống, nạp tài khoản mặc định...", LogType.INFO);
+                string initUsers = @"
+                    INSERT INTO Users VALUES ('admin@admin.edu.vn', 'admin123', 'ADMIN', 'Quản Trị Viên');
+                    INSERT INTO Users VALUES ('gv01@school.edu.vn', '123', 'USER', 'Nguyễn Văn A');
+                ";
+                new SqliteCommand(initUsers, conn).ExecuteNonQuery();
+            }
 
-            // Tạo bảng Students
+            // 2. Tạo bảng Students
             string tblStudents = @"
                 CREATE TABLE IF NOT EXISTS Students (
                     StudentID TEXT PRIMARY KEY,
                     FullName TEXT,
                     Class TEXT
                 );
-                INSERT OR IGNORE INTO Students VALUES ('SV001', 'Nguyen Van A', 'CNTT');
             ";
             new SqliteCommand(tblStudents, conn).ExecuteNonQuery();
+
+            // Chỉ nạp SV mẫu nếu bảng trống
+            var checkStudentCmd = new SqliteCommand("SELECT COUNT(*) FROM Students", conn);
+            if ((long)checkStudentCmd.ExecuteScalar() == 0)
+            {
+                Log("Bảng Students trống, nạp sinh viên mẫu...", LogType.INFO);
+                string initStudents = "INSERT INTO Students VALUES ('SV001', 'Nguyen Van A', 'CNTT')";
+                new SqliteCommand(initStudents, conn).ExecuteNonQuery();
+            }
             
-            Console.WriteLine("Kiem tra Database: OK");
+            Log("Kiem tra Database: OK", LogType.SUCCESS);
         }
     }
 
@@ -93,7 +127,7 @@ class Server
                 string request = Receive(stream);
                 if (request == null) break;
 
-                Console.WriteLine("SERVER nhan: " + request);
+                Log("Request: " + request, LogType.CMD);
 
                 string[] p = request.Split('|');
                 string cmd = p[0].Trim();
@@ -148,13 +182,13 @@ class Server
         }
         catch (Exception ex)
         {
-            Console.WriteLine("SERVER ERROR: " + ex.Message);
+            Log("SERVER ERROR: " + ex.Message, LogType.ERROR);
         }
         finally
         {
             lock(clients) clients.Remove(client);
             client.Close();
-            Console.WriteLine("Client disconnected");
+            Log("Client disconnected", LogType.INFO);
         }
     }
 
@@ -243,13 +277,42 @@ class Server
 
     static void SearchStudent(string[] p, NetworkStream s)
     {
+        if (p.Length < 3) return;
+        
+        string type = p[1].Trim();
+        string val = p[2].Trim();
+        
         using var conn = new SqliteConnection(connStr);
         conn.Open();
-        var cmd = new SqliteCommand("SELECT * FROM Students WHERE StudentID=@id", conn);
-        cmd.Parameters.AddWithValue("@id", p[1]);
+        
+        string query = "";
+        if (type == "ID") query = "SELECT StudentID, FullName, Class FROM Students WHERE StudentID=@v";
+        else if (type == "CLASS") query = "SELECT StudentID, FullName, Class FROM Students WHERE Class LIKE @v";
+        else if (type == "ALL") query = "SELECT StudentID, FullName, Class FROM Students WHERE StudentID LIKE @v OR FullName LIKE @v OR Class LIKE @v";
+            
+        var cmd = new SqliteCommand(query, conn);
+        cmd.Parameters.AddWithValue("@v", (type == "ID") ? val : $"%{val}%");
+        
         using var r = cmd.ExecuteReader();
-        if (r.Read()) Send(s, $"FOUND|{r["StudentID"]}|{r["FullName"]}|{r["Class"]}");
-        else Send(s, "STUDENT_NOT_FOUND");
+        
+        StringBuilder sb = new StringBuilder("LIST_RES|");
+        int count = 0;
+        while (r.Read())
+        {
+            count++;
+            sb.Append($"{r["StudentID"]}#{r["FullName"]}#{r["Class"]};");
+        }
+
+        if (count > 0) 
+        {
+            Send(s, sb.ToString());
+            Log($"Search [{type}:{val}] found {count} results.", LogType.SUCCESS);
+        }
+        else 
+        {
+            Send(s, "STUDENT_NOT_FOUND");
+            Log($"Search [{type}:{val}] NOT FOUND in database.", LogType.INFO);
+        }
     }
 
     static void ListStudents(NetworkStream s)
