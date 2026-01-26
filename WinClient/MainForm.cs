@@ -48,72 +48,45 @@ namespace WinClient
 
         private void InitAdminUI()
         {
-            Button btnCreateUser = new Button();
-            btnCreateUser.Text = "Cấp Quyền GV";
-            btnCreateUser.Size = new Size(130, 30);
-            btnCreateUser.Location = new Point(680, 15); 
-            // Style đẹp
-            btnCreateUser.BackColor = Color.Firebrick;
-            btnCreateUser.ForeColor = Color.White;
-            btnCreateUser.FlatStyle = FlatStyle.Flat;
-            btnCreateUser.FlatAppearance.BorderSize = 0;
-            btnCreateUser.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-            
-            btnCreateUser.Click += BtnCreateUser_Click;
-            btnCreateUser.Anchor = AnchorStyles.Top | AnchorStyles.Right; 
-            this.Controls.Add(btnCreateUser);
-            btnCreateUser.BringToFront();
-
-            Button btnViewUsers = new Button();
-            btnViewUsers.Text = "Xem DS Tài Khoản";
-            btnViewUsers.Size = new Size(130, 30);
-            btnViewUsers.Location = new Point(540, 15); 
-            
-            btnViewUsers.BackColor = Color.Teal;
-            btnViewUsers.ForeColor = Color.White;
-            btnViewUsers.FlatStyle = FlatStyle.Flat;
-            btnViewUsers.FlatAppearance.BorderSize = 0;
-            btnViewUsers.Font = new Font("Segoe UI", 9, FontStyle.Bold);
-
-            btnViewUsers.Anchor = AnchorStyles.Top | AnchorStyles.Right;
-            btnViewUsers.Click += BtnViewUsers_Click;
-            this.Controls.Add(btnViewUsers);
-            btnViewUsers.BringToFront();
+            // Các nút quản trị đã được chuyển vào Sidebar Menu để giao diện gọn gàng hơn
         }
 
         private void BtnViewUsers_Click(object sender, EventArgs e)
         {
-            Button btn = (Button)sender;
+            Button btn = sender as Button;
             if (!isViewingUsers)
             {
                 // Chuyển sang xem User
                 isViewingUsers = true;
-                btn.Text = "Xem DS Sinh Viên";
-                btn.BackColor = Color.DarkOrange;
+                if (btn != null)
+                {
+                    btn.Text = "Xem DS Sinh Viên";
+                    btn.BackColor = Color.DarkOrange;
+                }
                 
                 // Đổi cột Bảng
                 dtStudents.Clear();
                 dtStudents.Columns.Clear();
                 dtStudents.Columns.Add("Email / Username");
-                dtStudents.Columns.Add("Họ Tên"); // Thêm cột Họ Tên
+                dtStudents.Columns.Add("Họ Tên"); 
                 dtStudents.Columns.Add("Vai Trò (Role)");
                 dtStudents.Columns.Add("Mật Khẩu (Hidden)");
                 
-                // Vô hiệu hóa các nút quản lý SV, NHƯNG giữ nút Xóa
                 SetManageButtons(false);
-
                 SocketClient.Send("LIST_USERS");
             }
             else
             {
                 // Quay về xem SV
                 isViewingUsers = false;
-                btn.Text = "Xem DS Tài Khoản";
-                btn.BackColor = Color.Teal;
+                if (btn != null)
+                {
+                    btn.Text = "Xem DS Tài Khoản";
+                    btn.BackColor = Color.Teal;
+                }
                 
-                InitTable(); // Reset cột về SV
+                InitTable(); 
                 SetManageButtons(true);
-                
                 SocketClient.Send("LIST");
             }
         }
@@ -677,19 +650,133 @@ namespace WinClient
             isListening = false;
             base.OnFormClosing(e);
         }
+
+        // --- USER INFO PAGE ---
+        private Panel pnlUserInfo;
+
+        private void ShowDashboard()
+        {
+            if (pnlUserInfo != null) pnlUserInfo.Visible = false;
+            ToggleSidebar(); // Đóng menu
+        }
+
+        private void ShowUserInfo()
+        {
+            ToggleSidebar();
+            
+            if (pnlUserInfo == null)
+            {
+                pnlUserInfo = new Panel();
+                pnlUserInfo.Location = new Point(0, 0); // Bắt đầu từ 0,0 để phủ toàn bộ
+                pnlUserInfo.Size = this.ClientSize;
+                pnlUserInfo.BackColor = Color.FromArgb(240, 242, 245); 
+                pnlUserInfo.Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right;
+                
+                // --- HEADER RIÊNG CHO TRANG PROFILE ---
+                Panel pnlHeader = new Panel();
+                pnlHeader.Size = new Size(pnlUserInfo.Width, 60);
+                pnlHeader.BackColor = Color.White;
+                pnlHeader.Dock = DockStyle.Top;
+                pnlUserInfo.Controls.Add(pnlHeader);
+
+                Label lblProfileTitle = new Label();
+                lblProfileTitle.Text = "HỒ SƠ NGƯỜI DÙNG";
+                lblProfileTitle.Font = new Font("Segoe UI", 16, FontStyle.Bold);
+                lblProfileTitle.ForeColor = Color.FromArgb(0, 120, 215);
+                lblProfileTitle.Location = new Point(20, 15);
+                lblProfileTitle.AutoSize = true;
+                pnlHeader.Controls.Add(lblProfileTitle);
+
+                // --- PROFILE CARD CENTERED ---
+                Panel card = new Panel();
+                card.Size = new Size(550, 520); // Rộng hơn chút
+                card.BackColor = Color.White;
+                // Căn giữa card trong không gian còn lại
+                card.Location = new Point((pnlUserInfo.Width - card.Width) / 2, 100);
+                pnlUserInfo.Controls.Add(card);
+
+                // Avatar 
+                Label lblAvatar = new Label();
+                lblAvatar.Size = new Size(120, 120);
+                lblAvatar.Location = new Point((card.Width - 120) / 2, 30);
+                lblAvatar.BackColor = Color.FromArgb(0, 120, 215); 
+                lblAvatar.ForeColor = Color.White;
+                lblAvatar.Text = MyFullName.Length > 0 ? MyFullName.Substring(0, 1).ToUpper() : "U";
+                lblAvatar.Font = new Font("Segoe UI", 52, FontStyle.Bold);
+                lblAvatar.TextAlign = ContentAlignment.MiddleCenter;
+                card.Controls.Add(lblAvatar);
+
+                int x = 60;
+                int y = 170;
+
+                AddProfileField(card, "HỌ VÀ TÊN", MyFullName, x, y); y += 70;
+                AddProfileField(card, "ĐỊA CHỈ EMAIL", MyUsername, x, y); y += 70;
+                AddProfileField(card, "QUYỀN HẠN", UserRole, x, y); y += 70;
+                AddProfileField(card, "TRẠNG THÁI KẾT NỐI", "Trực tuyến (Online)", x, y, Color.SeaGreen);
+
+                // Nút Quay lại
+                Button btnBack = new Button();
+                btnBack.Text = "QUAY LẠI HỆ THỐNG";
+                btnBack.Size = new Size(430, 50);
+                btnBack.Location = new Point(60, 440);
+                btnBack.FlatStyle = FlatStyle.Flat;
+                btnBack.FlatAppearance.BorderSize = 0;
+                btnBack.BackColor = Color.FromArgb(0, 120, 215);
+                btnBack.ForeColor = Color.White;
+                btnBack.Font = new Font("Segoe UI", 10, FontStyle.Bold);
+                btnBack.Cursor = Cursors.Hand;
+                btnBack.Click += (s, e) => ShowDashboard();
+                card.Controls.Add(btnBack);
+
+                this.Controls.Add(pnlUserInfo);
+            }
+            
+            pnlUserInfo.Visible = true;
+            pnlUserInfo.BringToFront();
+            pnlSidebar.BringToFront(); 
+        }
+
+        private void AddProfileField(Panel parent, string title, string content, int x, int y, Color? contentColor = null)
+        {
+            Label lblT = new Label();
+            lblT.Text = title;
+            lblT.Font = new Font("Segoe UI", 8, FontStyle.Bold);
+            lblT.ForeColor = Color.DarkGray;
+            lblT.Location = new Point(x, y);
+            lblT.AutoSize = true;
+            parent.Controls.Add(lblT);
+
+            Label lblC = new Label();
+            lblC.Text = content;
+            lblC.Font = new Font("Segoe UI", 12, FontStyle.Bold);
+            lblC.ForeColor = contentColor ?? Color.FromArgb(40, 40, 40);
+            lblC.Location = new Point(x, y + 20);
+            lblC.AutoSize = true;
+            parent.Controls.Add(lblC);
+            
+            Panel line = new Panel();
+            line.Size = new Size(430, 1);
+            line.BackColor = Color.FromArgb(235, 235, 235);
+            line.Location = new Point(x, y + 55);
+            parent.Controls.Add(line);
+        }
+
         // --- SIDEBAR LOGIC ---
         private Panel pnlSidebar;
         private bool isSidebarOpen = false;
+        private System.Windows.Forms.Timer sidebarTimer;
+        private int sidebarStep = 50; // Tốc độ trượt
+        private int sidebarTargetX;
 
         private void InitSidebar()
         {
             pnlSidebar = new Panel();
             pnlSidebar.Size = new Size(250, this.Height); 
-            pnlSidebar.Location = new Point(0, 0); 
+            // Ban đầu ẩn bên trái màn hình
+            pnlSidebar.Location = new Point(-250, 0); 
             pnlSidebar.BackColor = Color.FromArgb(45, 45, 48); 
-            pnlSidebar.Visible = false; 
-            pnlSidebar.BringToFront(); 
-
+            pnlSidebar.Visible = true; 
+            
             // Header
             Label lblMenu = new Label();
             lblMenu.Text = "MENU DỰ ÁN";
@@ -712,15 +799,66 @@ namespace WinClient
 
             // Adding Items
             int top = 80;
-            AddSidebarItem("Trang Chủ", top, (s, e) => { ToggleSidebar(); MessageBox.Show("Đây là trang quản lý chính.", "Thông báo"); }); top += 50;
-            AddSidebarItem("Thông Tin Cá Nhân", top, (s, e) => { ToggleSidebar(); MessageBox.Show($"Tài khoản: {MyUsername}\nTên: {MyFullName}\nVai trò: {UserRole}", "Thông tin"); }); top += 50;
-            AddSidebarItem("Hướng Dẫn", top, (s, e) => { ToggleSidebar(); MessageBox.Show("Bấm Thêm/Sửa/Xóa để quản lý sinh viên.", "Hướng dẫn"); }); top += 50;
+            AddSidebarItem("Trang Chủ (Sinh Viên)", top, (s, e) => { 
+                ShowDashboard();
+                if (isViewingUsers) BtnViewUsers_Click(null, null); // Quay về xem SV nêú đang xem User
+            }); top += 50;
+
+            if (UserRole == "ADMIN")
+            {
+                AddSidebarItem("Quản Lý Giáo Viên", top, (s, e) => { 
+                    ShowDashboard();
+                    if (!isViewingUsers) BtnViewUsers_Click(null, null); // Chuyển sang xem User
+                }); top += 50;
+
+                AddSidebarItem("Cấp Tài Khoản GV", top, (s, e) => { 
+                    ToggleSidebar();
+                    BtnCreateUser_Click(null, null); 
+                }); top += 50;
+            }
+            
+            AddSidebarItem("Thông Tin Cá Nhân", top, (s, e) => ShowUserInfo()); top += 50;
+
             AddSidebarItem("Đăng Xuất", top, (s, e) => { 
-                IsLogout = true; // Đánh dấu là đăng xuất chủ động
+                IsLogout = true; 
                 this.Close(); 
             }); top += 50;
 
             this.Controls.Add(pnlSidebar);
+            pnlSidebar.BringToFront();
+
+            // INIT TIMER
+            sidebarTimer = new System.Windows.Forms.Timer();
+            sidebarTimer.Interval = 10; // 10ms
+            sidebarTimer.Tick += SidebarTimer_Tick;
+        }
+
+        private void SidebarTimer_Tick(object sender, EventArgs e)
+        {
+            int currentX = pnlSidebar.Location.X;
+            
+            if (isSidebarOpen)
+            {
+                // Đang mở: Trượt từ âm về 0
+                if (currentX < 0)
+                {
+                    currentX += sidebarStep;
+                    if (currentX > 0) currentX = 0;
+                    pnlSidebar.Location = new Point(currentX, 0);
+                }
+                else sidebarTimer.Stop(); // Đã mở xong
+            }
+            else
+            {
+                // Đang đóng: Trượt từ 0 về -250
+                if (currentX > -pnlSidebar.Width)
+                {
+                    currentX -= sidebarStep;
+                    if (currentX < -pnlSidebar.Width) currentX = -pnlSidebar.Width;
+                    pnlSidebar.Location = new Point(currentX, 0);
+                }
+                else sidebarTimer.Stop(); // Đã đóng xong
+            }
         }
 
         private void AddSidebarItem(string text, int top, EventHandler onClick)
@@ -746,8 +884,11 @@ namespace WinClient
         private void ToggleSidebar()
         {
             isSidebarOpen = !isSidebarOpen;
-            pnlSidebar.Visible = isSidebarOpen;
-            if (isSidebarOpen) pnlSidebar.BringToFront(); 
+            
+            // Nếu mở thì BringToFront để đè lên form
+            if (isSidebarOpen) pnlSidebar.BringToFront();
+            
+            sidebarTimer.Start();
         }
     }
 }

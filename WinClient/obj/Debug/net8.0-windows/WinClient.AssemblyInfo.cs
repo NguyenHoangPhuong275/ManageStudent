@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WinClient")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+554ea865d8820040435d1d1f8e6153aef0cd6a2e")]
 [assembly: System.Reflection.AssemblyProductAttribute("WinClient")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WinClient")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

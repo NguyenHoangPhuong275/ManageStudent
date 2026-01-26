@@ -12,3 +12,4 @@ C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\wincli
 C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\winclient\obj\Debug\net8.0-windows\WinClient.pdb
 C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\winclient\obj\Debug\net8.0-windows\WinClient.genruntimeconfig.cache
 C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\winclient\obj\Debug\net8.0-windows\ref\WinClient.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\winclient\obj\Debug\net8.0-windows\WinClient.sourcelink.json
