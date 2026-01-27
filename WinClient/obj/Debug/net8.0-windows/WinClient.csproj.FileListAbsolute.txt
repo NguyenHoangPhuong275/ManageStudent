@@ -15,3 +15,17 @@ C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinCli
 C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\obj\Debug\net8.0-windows\WinClient.genruntimeconfig.cache
 C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\obj\Debug\net8.0-windows\ref\WinClient.dll
 C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\winclient\obj\Debug\net8.0-windows\WinClient.LoginForm.resources
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\EPPlus.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\EPPlus.Interfaces.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\EPPlus.System.Drawing.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.Abstractions.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.FileExtensions.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\Microsoft.Extensions.Configuration.Json.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\Microsoft.Extensions.FileProviders.Abstractions.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\Microsoft.Extensions.FileProviders.Physical.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\Microsoft.Extensions.FileSystemGlobbing.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\Microsoft.Extensions.Primitives.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\bin\Debug\net8.0-windows\Microsoft.IO.RecyclableMemoryStream.dll
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\obj\Debug\net8.0-windows\WinClient.csproj.AssemblyReference.cache
+C:\Users\LAPTOP\Downloads\Nhom15_StudentMangement\Nhom15_StudentMangement\WinClient\obj\Debug\net8.0-windows\WinClient.csproj.CopyComplete

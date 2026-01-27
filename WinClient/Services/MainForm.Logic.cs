@@ -279,6 +279,120 @@ namespace WinClient
 
         private void btnRefresh_Click(object sender, EventArgs e) => RefreshData();
 
+        private void btnImport_Click(object sender, EventArgs e)
+        {
+            if (isViewingUsers) return;
+
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Title = "Chọn file Excel để nhập dữ liệu sinh viên";
+                ofd.Filter = "Excel Files|*.xlsx;*.xls";
+                ofd.FilterIndex = 1;
+
+                if (ofd.ShowDialog() != DialogResult.OK) return;
+
+                try
+                {
+                    // Thiết lập License cho EPPlus (NonCommercial = miễn phí)
+                    OfficeOpenXml.ExcelPackage.LicenseContext = OfficeOpenXml.LicenseContext.NonCommercial;
+
+                    using (var package = new OfficeOpenXml.ExcelPackage(new FileInfo(ofd.FileName)))
+                    {
+                        var worksheet = package.Workbook.Worksheets[0];
+                        if (worksheet == null)
+                        {
+                            MessageBox.Show("Không tìm thấy sheet nào trong file Excel!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                            return;
+                        }
+
+                        int rowCount = worksheet.Dimension?.Rows ?? 0;
+                        if (rowCount < 2)
+                        {
+                            MessageBox.Show("File Excel không có dữ liệu hoặc chỉ có tiêu đề!", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                            return;
+                        }
+
+                        // Hiển thị thông báo xác nhận
+                        int dataRows = rowCount - 1; // Trừ dòng tiêu đề
+                        DialogResult confirm = MessageBox.Show(
+                            $"File chứa {dataRows} sinh viên.\n\n" +
+                            "Cấu trúc cột yêu cầu:\n" +
+                            "Cột A: MSSV\n" +
+                            "Cột B: Họ Tên\n" +
+                            "Cột C: Lớp\n" +
+                            "Cột D: Số Điện Thoại\n" +
+                            "Cột E: Email\n" +
+                            "Cột F: Môn Học\n\n" +
+                            "Bạn có muốn tiếp tục nhập?",
+                            "Xác nhận nhập dữ liệu",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question
+                        );
+
+                        if (confirm != DialogResult.Yes) return;
+
+                        int successCount = 0;
+                        int errorCount = 0;
+                        System.Text.StringBuilder errors = new System.Text.StringBuilder();
+
+                        // Duyệt từ dòng 2 (bỏ qua tiêu đề)
+                        for (int row = 2; row <= rowCount; row++)
+                        {
+                            string mssv = worksheet.Cells[row, 1].Text?.Trim() ?? "";
+                            string hoTen = worksheet.Cells[row, 2].Text?.Trim() ?? "";
+                            string lop = worksheet.Cells[row, 3].Text?.Trim() ?? "";
+                            string sdt = worksheet.Cells[row, 4].Text?.Trim() ?? "";
+                            string email = worksheet.Cells[row, 5].Text?.Trim() ?? "";
+                            string mon = worksheet.Cells[row, 6].Text?.Trim() ?? "";
+
+                            // Bỏ qua dòng trống
+                            if (string.IsNullOrEmpty(mssv) && string.IsNullOrEmpty(hoTen)) continue;
+
+                            // Kiểm tra dữ liệu bắt buộc
+                            if (string.IsNullOrEmpty(mssv) || string.IsNullOrEmpty(hoTen))
+                            {
+                                errorCount++;
+                                errors.AppendLine($"Dòng {row}: Thiếu MSSV hoặc Họ Tên");
+                                continue;
+                            }
+
+                            // Thêm tiền tố SV nếu chưa có
+                            if (!mssv.StartsWith("SV", StringComparison.OrdinalIgnoreCase))
+                                mssv = "SV" + mssv;
+
+                            // Gửi lệnh ADD qua socket
+                            SocketClient.Send($"ADD|{mssv}|{hoTen}|{lop}|{sdt}|{email}|{mon}");
+                            successCount++;
+
+                            // Delay nhỏ để tránh overload server
+                            System.Threading.Thread.Sleep(50);
+                        }
+
+                        // Hiển thị kết quả
+                        string resultMsg = $"Hoàn tất nhập dữ liệu!\n\n";
+                        resultMsg += $"✓ Thành công: {successCount} sinh viên\n";
+                        if (errorCount > 0)
+                        {
+                            resultMsg += $"✗ Lỗi: {errorCount} dòng\n\n";
+                            resultMsg += "Chi tiết lỗi:\n" + errors.ToString();
+                        }
+
+                        MessageBox.Show(resultMsg, "Kết quả Import", MessageBoxButtons.OK,
+                            errorCount > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+
+                        LogSystem($"Import Excel: {successCount} thành công, {errorCount} lỗi");
+
+                        // Refresh danh sách
+                        RefreshData();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show($"Lỗi khi đọc file Excel:\n{ex.Message}", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                }
+            }
+        }
+
         private void dgvStudents_CellClick(object sender, DataGridViewCellEventArgs e)
         {
             if (e.RowIndex < 0) return;

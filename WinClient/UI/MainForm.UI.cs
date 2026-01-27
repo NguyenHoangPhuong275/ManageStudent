@@ -111,7 +111,7 @@ namespace WinClient
             btnUpdate = CreateActionButton("CẬP NHẬT", Color.FromArgb(37, 99, 235), bx += gap, by, bw, bh, btnUpdate_Click);
             btnDelete = CreateActionButton("XÓA BỎ", Color.FromArgb(220, 53, 69), bx += gap, by, bw, bh, btnDelete_Click);
             btnRefresh = CreateActionButton("LÀM MỚI", Color.FromArgb(255, 193, 7), bx += gap, by, bw, bh, btnRefresh_Click);
-            btnImport = CreateActionButton("NHẬP EXCEL", Color.SeaGreen, bx += gap, by, bw, bh, (s, e) => MessageBox.Show("Tính năng nhập Excel đang cập nhật..."));
+            btnImport = CreateActionButton("NHẬP EXCEL", Color.SeaGreen, bx += gap, by, bw, bh, btnImport_Click);
             btnUndo = CreateActionButton("HOÀN TÁC", Color.Gray, bx += gap, by, bw, bh, (s, e) => { /* Undo logic */ });
 
             pnlInputForm.Controls.Add(btnAdd); pnlInputForm.Controls.Add(btnUpdate);
