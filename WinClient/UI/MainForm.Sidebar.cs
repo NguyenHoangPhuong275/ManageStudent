@@ -31,7 +31,7 @@ namespace WinClient
 
             int top = 90;
             AddSidebarItem("Bảng điều khiển", top, (s, e) => ShowDashboard()); top += 55;
-            AddSidebarItem("Tra cứu & Lọc", top, (s, e) => ShowSearchPage()); top += 55;
+            AddSidebarItem("Tra cứu", top, (s, e) => ShowSearchPage()); top += 55;
             AddSidebarItem("Hồ sơ cá nhân", top, (s, e) => ShowUserInfo()); top += 55;
 
             if (UserRole == "ADMIN")
@@ -40,6 +40,7 @@ namespace WinClient
                 pnlSidebar.Controls.Add(lblAdmin);
                 top += 35;
                 AddSidebarItem("Cấp tài khoản", top, (s, e) => BtnCreateUser_Click(null, null)); top += 55;
+                AddSidebarItem("Quản lý tài khoản", top, (s, e) => { if (!isViewingUsers) BtnViewUsers_Click(null, null); }); top += 55;
             }
             
             AddSidebarItem("Đăng xuất", 650, (s, e) => { IsLogout = true; this.Close(); });

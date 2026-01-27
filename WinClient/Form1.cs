@@ -5,14 +5,14 @@ using System.Net.Sockets;
 
 namespace WinClient
 {
-    public partial class Form1 : Form
+    public partial class LoginForm : Form
     {
         private TextBox txtUser;
         private TextBox txtPass;
         private Button btnLogin;
         private Label lblMsg;
 
-        public Form1()
+        public LoginForm()
         {
             InitializeComponent();
             SetupUI();

@@ -10,12 +10,24 @@ namespace WinClient
     {
         // State & Data
         private DataTable dtStudents;
+        private DataGridView dgvStudents; // Added missing declaration
         private bool isListening = false;
         private string MyUsername;      // Email
         private string MyFullName;      // Actual Name
         private string UserRole;
         private bool isViewingUsers = false;
         public bool IsLogout = false;
+
+        // Input Components
+        private TextBox txtID, txtName, txtClass;
+        private TextBox txtPhone, txtEmail, txtSubject;
+        private Label lblWelcome;
+        private Label lblSectionTitle; // Title of the input section
+        private Panel pnlInputForm;    // The input form panel
+        private Label lblID, lblName, lblClass, lblPhone, lblEmail, lblSubject; // Field labels
+
+        // Action Buttons
+        private Button btnAdd, btnUpdate, btnDelete, btnRefresh, btnImport, btnUndo;
 
         // UI Components
         private RichTextBox rtbChat;
@@ -27,8 +39,9 @@ namespace WinClient
         private System.Windows.Forms.Timer chatClearTimer;
 
         // Dynamic Panels
-        private Panel pnlUserInfo;
         private Panel pnlSearchPage;
+        private Panel pnlProfilePage;
+        private PictureBox picProfileAvatar;
         private DataGridView dgvSearchResults;
         private ComboBox cbClasses;
 
@@ -42,6 +55,7 @@ namespace WinClient
             this.MyFullName = fullname;
 
             InitializeComponent(); // Designer (empty)
+            this.Load += MainForm_Load;
             InitCustomUI();        // Manual Refactored UI
             InitTable();
             

@@ -21,7 +21,7 @@ namespace WinClient
             // 
             this.ClientSize = new System.Drawing.Size(1284, 711);
             this.Name = "MainForm";
-            this.Load += new System.EventHandler(this.MainForm_Load);
+            //this.Load += new System.EventHandler(this.MainForm_Load);
             this.ResumeLayout(false);
         }
     }

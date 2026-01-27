@@ -99,7 +99,10 @@ namespace Server
                     break;
 
                 case "ADD":
-                    if (db.AddStudent(p[1], p[2], p[3]))
+                    string p4_add = p.Length > 4 ? p[4] : "";
+                    string p5_add = p.Length > 5 ? p[5] : "";
+                    string p6_add = p.Length > 6 ? p[6] : "";
+                    if (db.AddStudent(p[1], p[2], p[3], p4_add, p5_add, p6_add))
                     {
                         Send(stream, "ADD_SUCCESS");
                         Broadcast("REFRESH");
@@ -108,7 +111,10 @@ namespace Server
                     break;
 
                 case "UPDATE":
-                    if (db.UpdateStudent(p[1], p[2], p[3]))
+                    string p4_up = p.Length > 4 ? p[4] : "";
+                    string p5_up = p.Length > 5 ? p[5] : "";
+                    string p6_up = p.Length > 6 ? p[6] : "";
+                    if (db.UpdateStudent(p[1], p[2], p[3], p4_up, p5_up, p6_up))
                     {
                         Send(stream, "UPDATE_SUCCESS");
                         Broadcast("REFRESH");
@@ -147,7 +153,10 @@ namespace Server
 
                 case "CREATE_USER":
                     string fn = p.Length > 4 ? p[4] : "Giáo Viên";
-                    if (db.CreateUser(p[1], p[2], p[3], fn)) 
+                    string ce = p.Length > 5 ? p[5] : "";
+                    string ac = p.Length > 6 ? p[6] : "";
+                    string sb = p.Length > 7 ? p[7] : "";
+                    if (db.CreateUser(p[1], p[2], p[3], fn, ce, ac, sb)) 
                     {
                         Send(stream, "CREATE_USER_SUCCESS");
                         Broadcast("REFRESH");
@@ -157,7 +166,10 @@ namespace Server
 
                 case "UPDATE_USER":
                     string ufn = p.Length > 4 ? p[4] : "";
-                    if (db.UpdateUser(p[1], p[2], p[3], ufn)) 
+                    string uce = p.Length > 5 ? p[5] : null;
+                    string uac = p.Length > 6 ? p[6] : null;
+                    string usb = p.Length > 7 ? p[7] : null;
+                    if (db.UpdateUser(p[1], p[2], p[3], ufn, uce, uac, usb)) 
                     {
                         Send(stream, "UPDATE_USER_SUCCESS");
                         Broadcast("REFRESH");
