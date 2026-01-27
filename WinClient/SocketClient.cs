@@ -45,11 +45,7 @@ namespace WinClient
             try
             {
                 if (client == null || !client.Connected) return null;
-<<<<<<< HEAD
                 byte[] buffer = new byte[8192]; 
-=======
-                byte[] buffer = new byte[1024 * 1024]; // Tăng lên 1MB
->>>>>>> a9f7c149d44583bd431f7952ef8661382757e01c
                 int bytesRead = stream.Read(buffer, 0, buffer.Length);
                 return Encoding.UTF8.GetString(buffer, 0, bytesRead);
             }

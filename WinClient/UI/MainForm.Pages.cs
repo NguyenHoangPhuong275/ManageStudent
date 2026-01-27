@@ -9,111 +9,324 @@ namespace WinClient
     {
         private void ShowDashboard()
         {
-            if (pnlUserInfo != null) pnlUserInfo.Visible = false;
             if (pnlSearchPage != null) pnlSearchPage.Visible = false;
+            if (pnlProfilePage != null) pnlProfilePage.Visible = false;
+            if (isViewingUsers) BtnViewUsers_Click(null, null);
         }
 
         private void ShowUserInfo()
         {
-            if (pnlUserInfo == null)
+            if (isSidebarOpen) ToggleSidebar();
+            if (pnlSearchPage != null) pnlSearchPage.Visible = false;
+
+            if (pnlProfilePage == null)
             {
-                pnlUserInfo = new Panel { Size = this.ClientSize, BackColor = Color.FromArgb(245, 247, 251), Location = new Point(0, 0), Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right };
-                this.Controls.Add(pnlUserInfo);
-                
-                // Card container
-                Panel card = new Panel { 
-                    Size = new Size(500, 480), 
-                    BackColor = Color.White, 
-                    Location = new Point((pnlUserInfo.Width - 500) / 2, 80),
-                    Anchor = AnchorStyles.None
+                pnlProfilePage = new Panel { 
+                    Size = this.ClientSize, 
+                    BackColor = Color.FromArgb(240, 245, 250), 
+                    Location = new Point(0, 0), 
+                    Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right 
                 };
-                card.Paint += (s, e) => {
-                    ControlPaint.DrawBorder(e.Graphics, card.ClientRectangle, Color.FromArgb(230, 230, 230), ButtonBorderStyle.Solid);
-                };
-                pnlUserInfo.Controls.Add(card);
+                this.Controls.Add(pnlProfilePage);
 
-                // Avatar Circle
-                Panel avatar = new Panel {
-                    Size = new Size(100, 100),
-                    Location = new Point((card.Width - 100) / 2, 40),
-                    BackColor = (UserRole == "ADMIN") ? Color.FromArgb(0, 120, 215) : Color.FromArgb(0, 150, 136)
-                };
-                avatar.Paint += (s, e) => {
-                    e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-                    string initial = MyFullName.Substring(0, 1).ToUpper();
-                    using (Font f = new Font("Segoe UI", 32, FontStyle.Bold))
-                    {
-                        var size = e.Graphics.MeasureString(initial, f);
-                        e.Graphics.DrawString(initial, f, Brushes.White, (avatar.Width - size.Width) / 2, (avatar.Height - size.Height) / 2);
-                    }
-                };
-                card.Controls.Add(avatar);
-
-                Label lblName = new Label { 
-                    Text = MyFullName, 
-                    Font = new Font("Segoe UI", 16, FontStyle.Bold), 
-                    TextAlign = ContentAlignment.MiddleCenter,
-                    Location = new Point(0, 150),
-                    Size = new Size(500, 40),
-                    ForeColor = Color.FromArgb(44, 62, 80)
-                };
-                card.Controls.Add(lblName);
-
-                Label lblRole = new Label { 
-                    Text = (UserRole == "ADMIN") ? "QUẢN TRỊ VIÊN HỆ THỐNG" : "GIÁO VIÊN", 
-                    Font = new Font("Segoe UI", 10, FontStyle.Bold), 
-                    TextAlign = ContentAlignment.MiddleCenter,
-                    Location = new Point(0, 190),
-                    Size = new Size(500, 30),
-                    ForeColor = (UserRole == "ADMIN") ? Color.OrangeRed : Color.SeaGreen
-                };
-                card.Controls.Add(lblRole);
-
-                // Divider
-                Panel div = new Panel { Height = 1, BackColor = Color.FromArgb(240, 240, 240), Width = 400, Location = new Point(50, 230) };
-                card.Controls.Add(div);
-
-                // Information details
-                AddProfileItem(card, "Hộp thư điện tử:", MyUsername, 260);
-                AddProfileItem(card, "Trạng thái:", "Đang hoạt động", 310);
-                AddProfileItem(card, "Mã số định danh:", (UserRole == "ADMIN") ? "AD-001" : "GV-102", 360);
-                
-                Button btnBack = new Button { 
-                    Text = "QUAY LẠI BẢNG ĐIỀU KHIỂN", 
-                    Location = new Point(125, 410), 
-                    Size = new Size(250, 45), 
-                    BackColor = Color.FromArgb(0, 120, 215), 
+                // Header
+                Panel pnlHead = new Panel { Dock = DockStyle.Top, Height = 70, BackColor = Color.FromArgb(0, 120, 215) };
+                pnlProfilePage.Controls.Add(pnlHead);
+                Label lblTitle = new Label { 
+                    Text = "HỒ SƠ CÁ NHÂN", 
+                    Font = new Font("Segoe UI", 18, FontStyle.Bold), 
                     ForeColor = Color.White, 
-                    FlatStyle = FlatStyle.Flat,
-                    Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                    Location = new Point(20, 18), 
+                    AutoSize = true 
+                };
+                pnlHead.Controls.Add(lblTitle);
+
+                // Left Column - Avatar Card
+                Panel cardAvatar = new Panel {
+                    Location = new Point(30, 90),
+                    Size = new Size(300, 380),
+                    BackColor = Color.White
+                };
+                cardAvatar.Paint += (s, e) => ControlPaint.DrawBorder(e.Graphics, cardAvatar.ClientRectangle, Color.FromArgb(230, 230, 230), ButtonBorderStyle.Solid);
+                pnlProfilePage.Controls.Add(cardAvatar);
+
+                // Avatar
+                picProfileAvatar = new PictureBox {
+                    Size = new Size(140, 140),
+                    Location = new Point((cardAvatar.Width - 140) / 2, 30),
+                    BackColor = Color.FromArgb(0, 120, 215),
+                    SizeMode = PictureBoxSizeMode.StretchImage,
                     Cursor = Cursors.Hand
                 };
+                
+                // Load saved avatar if exists
+                string avatarPath = GetAvatarPath();
+                if (System.IO.File.Exists(avatarPath))
+                {
+                    picProfileAvatar.Image = Image.FromFile(avatarPath);
+                }
+                else
+                {
+                    // Default: Draw initial letter
+                    Bitmap bmp = new Bitmap(140, 140);
+                    using (Graphics g = Graphics.FromImage(bmp))
+                    {
+                        g.Clear(Color.FromArgb(0, 120, 215));
+                        string initial = !string.IsNullOrEmpty(MyFullName) ? MyFullName.Substring(0, 1).ToUpper() : "U";
+                        using (Font f = new Font("Segoe UI", 55, FontStyle.Bold))
+                        using (Brush br = new SolidBrush(Color.White))
+                        {
+                            SizeF sz = g.MeasureString(initial, f);
+                            g.DrawString(initial, f, br, (140 - sz.Width) / 2, (140 - sz.Height) / 2);
+                        }
+                    }
+                    picProfileAvatar.Image = bmp;
+                }
+                
+                // Make circular
+                System.Drawing.Drawing2D.GraphicsPath path = new System.Drawing.Drawing2D.GraphicsPath();
+                path.AddEllipse(0, 0, 140, 140);
+                picProfileAvatar.Region = new Region(path);
+                picProfileAvatar.Click += (s, e) => UploadAvatar();
+                cardAvatar.Controls.Add(picProfileAvatar);
+
+                // Name under avatar
+                Label lblAvatarName = new Label {
+                    Text = MyFullName,
+                    Font = new Font("Segoe UI", 14, FontStyle.Bold),
+                    ForeColor = Color.FromArgb(30, 41, 59),
+                    Location = new Point(0, 185),
+                    Size = new Size(cardAvatar.Width, 30),
+                    TextAlign = ContentAlignment.MiddleCenter
+                };
+                cardAvatar.Controls.Add(lblAvatarName);
+
+                // Role badge
+                Label lblRoleBadge = new Label {
+                    Text = UserRole == "ADMIN" ? "Quản trị viên" : "Giáo viên",
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    ForeColor = UserRole == "ADMIN" ? Color.FromArgb(234, 88, 12) : Color.FromArgb(37, 99, 235),
+                    BackColor = UserRole == "ADMIN" ? Color.FromArgb(255, 247, 237) : Color.FromArgb(239, 246, 255),
+                    Padding = new Padding(15, 5, 15, 5),
+                    Location = new Point((cardAvatar.Width - 160) / 2, 225),
+                    Size = new Size(160, 32),
+                    TextAlign = ContentAlignment.MiddleCenter
+                };
+                cardAvatar.Controls.Add(lblRoleBadge);
+
+                // Upload hint
+                Label lblUploadHint = new Label {
+                    Text = "Nhấn vào ảnh để thay đổi",
+                    Font = new Font("Segoe UI", 9, FontStyle.Italic),
+                    ForeColor = Color.Gray,
+                    Location = new Point(0, 280),
+                    Size = new Size(cardAvatar.Width, 25),
+                    TextAlign = ContentAlignment.MiddleCenter,
+                    Cursor = Cursors.Hand
+                };
+                lblUploadHint.Click += (s, e) => UploadAvatar();
+                cardAvatar.Controls.Add(lblUploadHint);
+
+                // Logout button
+                Button btnLogout = new Button {
+                    Text = "ĐĂNG XUẤT",
+                    Location = new Point(40, 330),
+                    Size = new Size(cardAvatar.Width - 80, 42),
+                    BackColor = Color.FromArgb(220, 53, 69),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Segoe UI", 10, FontStyle.Bold),
+                    Cursor = Cursors.Hand
+                };
+                btnLogout.FlatAppearance.BorderSize = 0;
+                btnLogout.Click += (s, e) => { IsLogout = true; this.Close(); };
+                cardAvatar.Controls.Add(btnLogout);
+
+                // Right Column - Info Card (expanded)
+                Panel cardInfo = new Panel {
+                    Location = new Point(370, 90),
+                    Size = new Size(580, 400),
+                    BackColor = Color.White
+                };
+                cardInfo.Paint += (s, e) => ControlPaint.DrawBorder(e.Graphics, cardInfo.ClientRectangle, Color.FromArgb(230, 230, 230), ButtonBorderStyle.Solid);
+                pnlProfilePage.Controls.Add(cardInfo);
+
+                Label lblInfoTitle = new Label {
+                    Text = "THÔNG TIN TÀI KHOẢN",
+                    Font = new Font("Segoe UI", 13, FontStyle.Bold),
+                    ForeColor = Color.FromArgb(30, 41, 59),
+                    Location = new Point(30, 25),
+                    AutoSize = true
+                };
+                cardInfo.Controls.Add(lblInfoTitle);
+
+                // Info Grid - 2 columns with more spacing
+                int yInfo = 75;
+                int col1 = 30, col2 = 310;
+                int rowGap = 80;
+                
+                AddProfileFieldCompact(cardInfo, "EMAIL ĐĂNG NHẬP", MyUsername, col1, yInfo);
+                AddProfileFieldCompact(cardInfo, "NGÀY THAM GIA", DateTime.Now.ToString("dd/MM/yyyy"), col2, yInfo);
+                yInfo += rowGap;
+                
+                AddProfileFieldCompact(cardInfo, "HỌ VÀ TÊN", MyFullName, col1, yInfo);
+                AddProfileFieldCompact(cardInfo, "VAI TRÒ HỆ THỐNG", UserRole == "ADMIN" ? "Quản trị viên" : "Giáo viên", col2, yInfo);
+                yInfo += rowGap;
+                
+                AddProfileFieldCompact(cardInfo, "SỐ ĐIỆN THOẠI", "Chưa cập nhật", col1, yInfo);
+                AddProfileFieldCompact(cardInfo, "ĐƠN VỊ CÔNG TÁC", "Trường Đại Học", col2, yInfo);
+                yInfo += rowGap;
+                
+                AddProfileFieldCompact(cardInfo, "ĐỊA CHỈ", "Chưa cập nhật", col1, yInfo);
+                AddProfileFieldCompact(cardInfo, "TRẠNG THÁI", "Đang hoạt động", col2, yInfo);
+
+                // Back button
+                Button btnBack = new Button {
+                    Text = "← QUAY LẠI TRANG CHỦ",
+                    Location = new Point(30, pnlProfilePage.Height - 70),
+                    Size = new Size(220, 45),
+                    BackColor = Color.FromArgb(71, 85, 105),
+                    ForeColor = Color.White,
+                    FlatStyle = FlatStyle.Flat,
+                    Font = new Font("Segoe UI", 9, FontStyle.Bold),
+                    Cursor = Cursors.Hand,
+                    Anchor = AnchorStyles.Bottom | AnchorStyles.Left
+                };
                 btnBack.FlatAppearance.BorderSize = 0;
-                btnBack.Click += (s, e) => ShowDashboard();
-                card.Controls.Add(btnBack);
+                btnBack.Click += (s, e) => { pnlProfilePage.Visible = false; };
+                pnlProfilePage.Controls.Add(btnBack);
             }
-            pnlUserInfo.Visible = true;
-            pnlUserInfo.BringToFront();
+            else
+            {
+                // Refresh avatar if changed
+                string avatarPath = GetAvatarPath();
+                if (System.IO.File.Exists(avatarPath))
+                {
+                    picProfileAvatar.Image?.Dispose();
+                    picProfileAvatar.Image = Image.FromFile(avatarPath);
+                }
+            }
+
+            pnlProfilePage.Visible = true;
+            pnlProfilePage.BringToFront();
         }
 
-        private void AddProfileItem(Panel card, string label, string value, int y)
+        private void AddProfileField(Panel parent, string label, string value, int y)
         {
-            Label lb = new Label { 
-                Text = label, 
-                Location = new Point(50, y), 
-                Font = new Font("Segoe UI", 9, FontStyle.Bold), 
-                ForeColor = Color.FromArgb(127, 140, 141),
-                AutoSize = true 
+            Label lbl = new Label {
+                Text = label,
+                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                ForeColor = Color.FromArgb(148, 163, 184),
+                Location = new Point(50, y),
+                AutoSize = true
             };
-            Label vl = new Label { 
-                Text = value, 
-                Location = new Point(50, y + 20), 
-                Font = new Font("Segoe UI", 10), 
-                ForeColor = Color.FromArgb(44, 62, 80),
-                AutoSize = true 
+            parent.Controls.Add(lbl);
+
+            Label val = new Label {
+                Text = value,
+                Font = new Font("Segoe UI", 12, FontStyle.Bold),
+                ForeColor = Color.FromArgb(30, 41, 59),
+                Location = new Point(50, y + 20),
+                AutoSize = true
             };
-            card.Controls.Add(lb);
-            card.Controls.Add(vl);
+            parent.Controls.Add(val);
+        }
+
+        private void AddProfileFieldCompact(Panel parent, string label, string value, int x, int y)
+        {
+            Label lbl = new Label {
+                Text = label,
+                Font = new Font("Segoe UI", 8, FontStyle.Bold),
+                ForeColor = Color.FromArgb(148, 163, 184),
+                Location = new Point(x, y),
+                AutoSize = true
+            };
+            parent.Controls.Add(lbl);
+
+            Label val = new Label {
+                Text = value,
+                Font = new Font("Segoe UI", 11),
+                ForeColor = Color.FromArgb(30, 41, 59),
+                Location = new Point(x, y + 22),
+                AutoSize = true
+            };
+            parent.Controls.Add(val);
+        }
+
+        private void AddStatItem(Panel parent, string icon, string label, string value, int x)
+        {
+            Label lblIcon = new Label {
+                Text = icon,
+                Font = new Font("Segoe UI", 16),
+                Location = new Point(x + 10, 10),
+                Size = new Size(35, 40),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
+            parent.Controls.Add(lblIcon);
+
+            Label lblLabel = new Label {
+                Text = label,
+                Font = new Font("Segoe UI", 8),
+                ForeColor = Color.FromArgb(100, 116, 139),
+                Location = new Point(x + 45, 10),
+                AutoSize = true
+            };
+            parent.Controls.Add(lblLabel);
+
+            Label lblValue = new Label {
+                Text = value,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold),
+                ForeColor = Color.FromArgb(30, 41, 59),
+                Location = new Point(x + 45, 28),
+                AutoSize = true
+            };
+            parent.Controls.Add(lblValue);
+        }
+
+        private string GetAvatarPath()
+        {
+            string folder = System.IO.Path.Combine(Application.StartupPath, "avatars");
+            if (!System.IO.Directory.Exists(folder)) System.IO.Directory.CreateDirectory(folder);
+            // Use username (email) as filename, replace invalid chars
+            string safeName = MyUsername.Replace("@", "_").Replace(".", "_");
+            return System.IO.Path.Combine(folder, $"{safeName}.png");
+        }
+
+        private void UploadAvatar()
+        {
+            using (OpenFileDialog ofd = new OpenFileDialog())
+            {
+                ofd.Title = "Chọn ảnh đại diện";
+                ofd.Filter = "Ảnh|*.jpg;*.jpeg;*.png;*.bmp;*.gif";
+                if (ofd.ShowDialog() == DialogResult.OK)
+                {
+                    try
+                    {
+                        Image img = Image.FromFile(ofd.FileName);
+                        // Resize to 120x120
+                        Bitmap resized = new Bitmap(120, 120);
+                        using (Graphics g = Graphics.FromImage(resized))
+                        {
+                            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                            g.DrawImage(img, 0, 0, 120, 120);
+                        }
+                        
+                        // Save to file
+                        string path = GetAvatarPath();
+                        resized.Save(path, System.Drawing.Imaging.ImageFormat.Png);
+                        
+                        // Update UI
+                        picProfileAvatar.Image?.Dispose();
+                        picProfileAvatar.Image = resized;
+                        
+                        MessageBox.Show("Đã cập nhật ảnh đại diện!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
+                    }
+                    catch (Exception ex)
+                    {
+                        MessageBox.Show("Lỗi khi tải ảnh: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                    }
+                }
+            }
         }
 
         private void ShowSearchPage()
@@ -129,11 +342,11 @@ namespace WinClient
                 // 1. Header Card
                 Panel head = new Panel { Dock = DockStyle.Top, Height = 70, BackColor = Color.White };
                 pnlSearchPage.Controls.Add(head);
-                Label title = new Label { Text = "TRA CỨU & LỌC DỮ LIỆU", Font = new Font("Segoe UI", 18, FontStyle.Bold), ForeColor = Color.FromArgb(15, 23, 42), Location = new Point(20, 18), AutoSize = true };
+                Label title = new Label { Text = "TRA CỨU", Font = new Font("Segoe UI", 18, FontStyle.Bold), ForeColor = Color.FromArgb(15, 23, 42), Location = new Point(20, 18), AutoSize = true };
                 head.Controls.Add(title);
 
                 // 2. Filter Card
-                Panel filterArea = new Panel { Location = new Point(20, 90), Size = new Size(pnlSearchPage.Width - 360, 120), BackColor = Color.White };
+                Panel filterArea = new Panel { Location = new Point(20, 90), Size = new Size(pnlSearchPage.Width - 40, 120), BackColor = Color.White };
                 filterArea.Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
                 filterArea.Paint += (s, e) => ControlPaint.DrawBorder(e.Graphics, filterArea.ClientRectangle, Color.FromArgb(230, 230, 230), ButtonBorderStyle.Solid);
                 pnlSearchPage.Controls.Add(filterArea);
@@ -173,7 +386,7 @@ namespace WinClient
                 // 3. Results Card
                 Panel gridCard = new Panel {
                     Location = new Point(20, 230),
-                    Size = new Size(pnlSearchPage.Width - 360, 410),
+                    Size = new Size(pnlSearchPage.Width - 40, 410),
                     BackColor = Color.White,
                     Anchor = AnchorStyles.Top | AnchorStyles.Bottom | AnchorStyles.Left | AnchorStyles.Right
                 };

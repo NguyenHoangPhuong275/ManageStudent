@@ -29,12 +29,18 @@ namespace Server.Core
                         Username TEXT PRIMARY KEY,
                         Password TEXT,
                         Role TEXT,
-                        FullName TEXT
+                        FullName TEXT,
+                        ContactEmail TEXT,
+                        AssignedClass TEXT,
+                        Subject TEXT
                     );";
                 new SqliteCommand(tblUsers, conn).ExecuteNonQuery();
 
-                // Migration
+                // Migration - add new columns if they don't exist
                 try { new SqliteCommand("ALTER TABLE Users ADD COLUMN FullName TEXT", conn).ExecuteNonQuery(); } catch { }
+                try { new SqliteCommand("ALTER TABLE Users ADD COLUMN ContactEmail TEXT", conn).ExecuteNonQuery(); } catch { }
+                try { new SqliteCommand("ALTER TABLE Users ADD COLUMN AssignedClass TEXT", conn).ExecuteNonQuery(); } catch { }
+                try { new SqliteCommand("ALTER TABLE Users ADD COLUMN Subject TEXT", conn).ExecuteNonQuery(); } catch { }
 
                 var checkUserCmd = new SqliteCommand("SELECT COUNT(*) FROM Users", conn);
                 if ((long)checkUserCmd.ExecuteScalar() == 0)
@@ -50,14 +56,22 @@ namespace Server.Core
                     CREATE TABLE IF NOT EXISTS Students (
                         StudentID TEXT PRIMARY KEY,
                         FullName TEXT,
-                        Class TEXT
+                        Class TEXT,
+                        Phone TEXT,
+                        Email TEXT,
+                        Subject TEXT
                     );";
                 new SqliteCommand(tblStudents, conn).ExecuteNonQuery();
+
+                // Migration: Add columns if they don't exist
+                try { new SqliteCommand("ALTER TABLE Students ADD COLUMN Phone TEXT", conn).ExecuteNonQuery(); } catch { }
+                try { new SqliteCommand("ALTER TABLE Students ADD COLUMN Email TEXT", conn).ExecuteNonQuery(); } catch { }
+                try { new SqliteCommand("ALTER TABLE Students ADD COLUMN Subject TEXT", conn).ExecuteNonQuery(); } catch { }
 
                 var checkStudentCmd = new SqliteCommand("SELECT COUNT(*) FROM Students", conn);
                 if ((long)checkStudentCmd.ExecuteScalar() == 0)
                 {
-                    string initStudents = "INSERT INTO Students VALUES ('SV001', 'Nguyen Van A', 'CNTT')";
+                    string initStudents = "INSERT INTO Students VALUES ('SV001', 'Nguyen Van A', 'CNTT', '0909123456', 'nva@email.com', 'Lap Trinh C#')";
                     new SqliteCommand(initStudents, conn).ExecuteNonQuery();
                 }
             }
@@ -90,7 +104,7 @@ namespace Server.Core
             var list = new List<User>();
             using var conn = new SqliteConnection(connStr);
             conn.Open();
-            var cmd = new SqliteCommand("SELECT Username, FullName, Role FROM Users", conn);
+            var cmd = new SqliteCommand("SELECT Username, FullName, Role, ContactEmail, AssignedClass, Subject FROM Users", conn);
             using var r = cmd.ExecuteReader();
             while (r.Read())
             {
@@ -98,22 +112,28 @@ namespace Server.Core
                 list.Add(new User {
                     Username = r["Username"].ToString(),
                     FullName = string.IsNullOrWhiteSpace(fn) ? r["Username"].ToString() : fn,
-                    Role = r["Role"].ToString()
+                    Role = r["Role"].ToString(),
+                    ContactEmail = r["ContactEmail"] is DBNull ? "" : r["ContactEmail"].ToString(),
+                    AssignedClass = r["AssignedClass"] is DBNull ? "" : r["AssignedClass"].ToString(),
+                    Subject = r["Subject"] is DBNull ? "" : r["Subject"].ToString()
                 });
             }
             return list;
         }
 
-        public bool CreateUser(string u, string p, string r, string fn)
+        public bool CreateUser(string u, string p, string r, string fn, string contactEmail = "", string assignedClass = "", string subject = "")
         {
             try {
                 using var conn = new SqliteConnection(connStr);
                 conn.Open();
-                var cmd = new SqliteCommand("INSERT INTO Users VALUES (@u, @p, @r, @fn)", conn);
+                var cmd = new SqliteCommand("INSERT INTO Users (Username, Password, Role, FullName, ContactEmail, AssignedClass, Subject) VALUES (@u, @p, @r, @fn, @ce, @ac, @sb)", conn);
                 cmd.Parameters.AddWithValue("@u", u);
                 cmd.Parameters.AddWithValue("@p", p);
                 cmd.Parameters.AddWithValue("@r", r);
                 cmd.Parameters.AddWithValue("@fn", fn);
+                cmd.Parameters.AddWithValue("@ce", contactEmail);
+                cmd.Parameters.AddWithValue("@ac", assignedClass);
+                cmd.Parameters.AddWithValue("@sb", subject);
                 return cmd.ExecuteNonQuery() > 0;
             } catch { return false; }
         }
@@ -128,13 +148,16 @@ namespace Server.Core
             return cmd.ExecuteNonQuery() > 0;
         }
 
-        public bool UpdateUser(string u, string p, string r, string fn)
+        public bool UpdateUser(string u, string p, string r, string fn, string contactEmail = null, string assignedClass = null, string subject = null)
         {
             using var conn = new SqliteConnection(connStr);
             conn.Open();
             string sql = "UPDATE Users SET Role=@r";
             if (!string.IsNullOrEmpty(p)) sql += ", Password=@p";
             if (!string.IsNullOrEmpty(fn)) sql += ", FullName=@fn";
+            if (contactEmail != null) sql += ", ContactEmail=@ce";
+            if (assignedClass != null) sql += ", AssignedClass=@ac";
+            if (subject != null) sql += ", Subject=@sb";
             sql += " WHERE Username=@u";
 
             var cmd = new SqliteCommand(sql, conn);
@@ -142,6 +165,9 @@ namespace Server.Core
             cmd.Parameters.AddWithValue("@r", r);
             if (!string.IsNullOrEmpty(p)) cmd.Parameters.AddWithValue("@p", p);
             if (!string.IsNullOrEmpty(fn)) cmd.Parameters.AddWithValue("@fn", fn);
+            if (contactEmail != null) cmd.Parameters.AddWithValue("@ce", contactEmail);
+            if (assignedClass != null) cmd.Parameters.AddWithValue("@ac", assignedClass);
+            if (subject != null) cmd.Parameters.AddWithValue("@sb", subject);
             return cmd.ExecuteNonQuery() > 0;
         }
 
@@ -156,27 +182,33 @@ namespace Server.Core
             return (long)cmd.ExecuteScalar() > 0;
         }
 
-        public bool AddStudent(string id, string name, string cls)
+        public bool AddStudent(string id, string name, string cls, string phone, string email, string subject)
         {
             try {
                 using var conn = new SqliteConnection(connStr);
                 conn.Open();
-                var cmd = new SqliteCommand("INSERT INTO Students VALUES (@id, @n, @c)", conn);
+                var cmd = new SqliteCommand("INSERT INTO Students VALUES (@id, @n, @c, @p, @e, @s)", conn);
                 cmd.Parameters.AddWithValue("@id", id);
                 cmd.Parameters.AddWithValue("@n", name);
                 cmd.Parameters.AddWithValue("@c", cls);
+                cmd.Parameters.AddWithValue("@p", phone);
+                cmd.Parameters.AddWithValue("@e", email);
+                cmd.Parameters.AddWithValue("@s", subject);
                 return cmd.ExecuteNonQuery() > 0;
             } catch { return false; }
         }
 
-        public bool UpdateStudent(string id, string name, string cls)
+        public bool UpdateStudent(string id, string name, string cls, string phone, string email, string subject)
         {
             using var conn = new SqliteConnection(connStr);
             conn.Open();
-            var cmd = new SqliteCommand("UPDATE Students SET FullName=@n, Class=@c WHERE StudentID=@id", conn);
+            var cmd = new SqliteCommand("UPDATE Students SET FullName=@n, Class=@c, Phone=@p, Email=@e, Subject=@s WHERE StudentID=@id", conn);
             cmd.Parameters.AddWithValue("@id", id);
             cmd.Parameters.AddWithValue("@n", name);
             cmd.Parameters.AddWithValue("@c", cls);
+            cmd.Parameters.AddWithValue("@p", phone);
+            cmd.Parameters.AddWithValue("@e", email);
+            cmd.Parameters.AddWithValue("@s", subject);
             return cmd.ExecuteNonQuery() > 0;
         }
 
@@ -207,7 +239,10 @@ namespace Server.Core
                 list.Add(new Student {
                     StudentID = r["StudentID"].ToString(),
                     FullName = r["FullName"].ToString(),
-                    Class = r["Class"].ToString()
+                    Class = r["Class"].ToString(),
+                    Phone = r["Phone"] is DBNull ? "" : r["Phone"].ToString(),
+                    Email = r["Email"] is DBNull ? "" : r["Email"].ToString(),
+                    Subject = r["Subject"] is DBNull ? "" : r["Subject"].ToString()
                 });
             }
             return list;
@@ -225,7 +260,10 @@ namespace Server.Core
                 list.Add(new Student {
                     StudentID = r["StudentID"].ToString(),
                     FullName = r["FullName"].ToString(),
-                    Class = r["Class"].ToString()
+                    Class = r["Class"].ToString(),
+                    Phone = r["Phone"] is DBNull ? "" : r["Phone"].ToString(),
+                    Email = r["Email"] is DBNull ? "" : r["Email"].ToString(),
+                    Subject = r["Subject"] is DBNull ? "" : r["Subject"].ToString()
                 });
             }
             return list;
