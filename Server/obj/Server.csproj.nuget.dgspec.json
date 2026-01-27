@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\server\\Server.csproj": {}
+    "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\Server\\Server.csproj": {}
   },
   "projects": {
-    "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\server\\Server.csproj": {
+    "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\Server\\Server.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\server\\Server.csproj",
+        "projectUniqueName": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\Server\\Server.csproj",
         "projectName": "Server",
-        "projectPath": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\server\\Server.csproj",
+        "projectPath": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\Server\\Server.csproj",
         "packagesPath": "C:\\Users\\LAPTOP\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\server\\obj\\",
+        "outputPath": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\Server\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\LAPTOP\\AppData\\Roaming\\NuGet\\NuGet.Config"
