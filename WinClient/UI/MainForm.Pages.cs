@@ -302,22 +302,47 @@ namespace WinClient
                 {
                     try
                     {
-                        Image img = Image.FromFile(ofd.FileName);
-                        // Resize to 120x120
-                        Bitmap resized = new Bitmap(120, 120);
-                        using (Graphics g = Graphics.FromImage(resized))
+                        string avatarPath = GetAvatarPath();
+                        
+                        // Đọc file vào memory stream để không khóa file gốc
+                        byte[] imageBytes = System.IO.File.ReadAllBytes(ofd.FileName);
+                        using (MemoryStream ms = new MemoryStream(imageBytes))
+                        using (Image img = Image.FromStream(ms))
                         {
-                            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
-                            g.DrawImage(img, 0, 0, 120, 120);
+                            // Resize to 140x140
+                            using (Bitmap resized = new Bitmap(140, 140))
+                            {
+                                using (Graphics g = Graphics.FromImage(resized))
+                                {
+                                    g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                                    g.DrawImage(img, 0, 0, 140, 140);
+                                }
+                                
+                                // Dispose ảnh cũ trong PictureBox trước khi lưu file mới
+                                if (picProfileAvatar.Image != null)
+                                {
+                                    var oldImage = picProfileAvatar.Image;
+                                    picProfileAvatar.Image = null;
+                                    oldImage.Dispose();
+                                }
+                                
+                                // Xóa file cũ nếu tồn tại
+                                if (System.IO.File.Exists(avatarPath))
+                                {
+                                    System.IO.File.Delete(avatarPath);
+                                }
+                                
+                                // Lưu file mới
+                                resized.Save(avatarPath, System.Drawing.Imaging.ImageFormat.Png);
+                                
+                                // Đọc lại file vừa lưu để hiển thị (tránh khóa file)
+                                byte[] savedBytes = System.IO.File.ReadAllBytes(avatarPath);
+                                using (MemoryStream msDisplay = new MemoryStream(savedBytes))
+                                {
+                                    picProfileAvatar.Image = Image.FromStream(msDisplay);
+                                }
+                            }
                         }
-                        
-                        // Save to file
-                        string path = GetAvatarPath();
-                        resized.Save(path, System.Drawing.Imaging.ImageFormat.Png);
-                        
-                        // Update UI
-                        picProfileAvatar.Image?.Dispose();
-                        picProfileAvatar.Image = resized;
                         
                         MessageBox.Show("Đã cập nhật ảnh đại diện!", "Thành công", MessageBoxButtons.OK, MessageBoxIcon.Information);
                     }
