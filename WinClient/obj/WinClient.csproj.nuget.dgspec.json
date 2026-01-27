@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\winclient\\WinClient.csproj": {}
+    "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\WinClient\\WinClient.csproj": {}
   },
   "projects": {
-    "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\winclient\\WinClient.csproj": {
+    "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\WinClient\\WinClient.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\winclient\\WinClient.csproj",
+        "projectUniqueName": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\WinClient\\WinClient.csproj",
         "projectName": "WinClient",
-        "projectPath": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\winclient\\WinClient.csproj",
+        "projectPath": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\WinClient\\WinClient.csproj",
         "packagesPath": "C:\\Users\\LAPTOP\\.nuget\\packages\\",
-        "outputPath": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\winclient\\obj\\",
+        "outputPath": "C:\\Users\\LAPTOP\\Downloads\\Nhom15_StudentMangement\\Nhom15_StudentMangement\\WinClient\\obj\\",
         "projectStyle": "PackageReference",
         "configFilePaths": [
           "C:\\Users\\LAPTOP\\AppData\\Roaming\\NuGet\\NuGet.Config"

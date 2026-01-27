@@ -20,83 +20,67 @@ namespace WinClient
 
         private void SetupUI()
         {
-            this.Text = "QUẢN LÝ SINH VIÊN";
-            this.Size = new Size(450, 400); // Tăng chiều rộng lên 450
+            this.Text = "ĐĂNG NHẬP HỆ THỐNG";
+            this.Size = new Size(400, 350);
             this.StartPosition = FormStartPosition.CenterScreen;
             this.FormBorderStyle = FormBorderStyle.FixedDialog;
             this.MaximizeBox = false;
-            this.BackColor = Color.WhiteSmoke;
+            this.BackColor = Color.FromArgb(245, 245, 245);
+            this.Font = new Font("Segoe UI", 9);
 
-            // Tính toán căn giữa
-            int centerX  = this.ClientSize.Width / 2;
-            int inputW   = 320; // Rộng hơn vì Form rộng hơn
-            int inputX   = (this.ClientSize.Width - inputW) / 2;
-            
-            // TITLE
-            Label lblTitle = new Label();
-            lblTitle.Text = "ĐĂNG NHẬP HỆ THỐNG";
-            lblTitle.Font = new Font("Segoe UI", 16, FontStyle.Bold); // Giảm size chữ xuống 16
-            lblTitle.ForeColor = Color.DarkBlue;
-            lblTitle.AutoSize = true;
+            int x = 40, w = 300;
+
+            Label lblTitle = new Label {
+                Text = "QUẢN LÝ SINH VIÊN",
+                Font = new Font("Segoe UI", 16, FontStyle.Bold),
+                Location = new Point(x, 30),
+                Size = new Size(w, 40),
+                TextAlign = ContentAlignment.MiddleCenter
+            };
             this.Controls.Add(lblTitle);
-            
-            // Căn giữa Title sau khi Add
-            lblTitle.Location = new Point((this.ClientSize.Width - lblTitle.PreferredWidth) / 2, 30);
 
-            // USERNAME
-            Label l1 = new Label(); 
-            l1.Text = "Tài khoản (Email):"; 
-            l1.Font = new Font("Segoe UI", 10, FontStyle.Regular);
-            l1.AutoSize = true;
-            l1.Location = new Point(inputX, 90);
+            Label l1 = new Label { Text = "Tài khoản:", Location = new Point(x, 90), AutoSize = true };
             this.Controls.Add(l1);
-            
-            txtUser = new TextBox();
-            txtUser.Location = new Point(inputX, 115);
-            txtUser.Size = new Size(inputW, 30); // Cao hơn chút nhưng TextBox thường fixed height theo font
-            txtUser.Font = new Font("Segoe UI", 11); // Font to hơn
-            txtUser.Text = "admin@admin.edu.vn"; 
+
+            txtUser = new TextBox { 
+                Location = new Point(x, 115), 
+                Width = w, 
+                Text = "admin@admin.edu.vn",
+                Font = new Font("Segoe UI", 10)
+            };
             this.Controls.Add(txtUser);
 
-            // PASSWORD
-            Label l2 = new Label(); 
-            l2.Text = "Mật khẩu:"; 
-            l2.Font = new Font("Segoe UI", 10, FontStyle.Regular);
-            l2.AutoSize = true;
-            l2.Location = new Point(inputX, 160); // Cách xa User ra chút
+            Label l2 = new Label { Text = "Mật khẩu:", Location = new Point(x, 155), AutoSize = true };
             this.Controls.Add(l2);
-            
-            txtPass = new TextBox();
-            txtPass.Location = new Point(inputX, 185);
-            txtPass.Size = new Size(inputW, 30);
-            txtPass.PasswordChar = '•';
-            txtPass.Font = new Font("Segoe UI", 11);
+
+            txtPass = new TextBox { 
+                Location = new Point(x, 180), 
+                Width = w, 
+                PasswordChar = '●',
+                Font = new Font("Segoe UI", 10)
+            };
             this.Controls.Add(txtPass);
 
-            // BUTTON
-            btnLogin = new Button();
-            btnLogin.Text = "ĐĂNG NHẬP";
-            btnLogin.Location = new Point(inputX, 240); // Cách Pass xa hơn
-            btnLogin.Size = new Size(inputW, 45); // Cao hơn, bấm cho sướng
-            btnLogin.BackColor = Color.FromArgb(0, 120, 215); // Xanh chuẩn Windows
-            btnLogin.ForeColor = Color.White;
-            btnLogin.FlatStyle = FlatStyle.Flat;
-            btnLogin.FlatAppearance.BorderSize = 0;
-            btnLogin.Font = new Font("Segoe UI", 11, FontStyle.Bold);
-            btnLogin.Cursor = Cursors.Hand;
+            btnLogin = new Button {
+                Text = "ĐĂNG NHẬP",
+                Location = new Point(x, 230),
+                Size = new Size(w, 40),
+                BackColor = Color.FromArgb(0, 120, 215),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Font = new Font("Segoe UI", 10, FontStyle.Bold)
+            };
             btnLogin.Click += BtnLogin_Click;
             this.Controls.Add(btnLogin);
 
-            // MESSAGE LABEL
-            lblMsg = new Label();
-            lblMsg.Location = new Point(inputX, 300);
-            lblMsg.Size = new Size(inputW, 25);
-            lblMsg.TextAlign = ContentAlignment.MiddleCenter;
-            lblMsg.ForeColor = Color.Crimson;
-            lblMsg.Font = new Font("Segoe UI", 9, FontStyle.Italic);
+            lblMsg = new Label {
+                Location = new Point(x, 280),
+                Size = new Size(w, 20),
+                TextAlign = ContentAlignment.MiddleCenter,
+                ForeColor = Color.Red
+            };
             this.Controls.Add(lblMsg);
 
-            // Enter key
             this.AcceptButton = btnLogin;
         }
 
@@ -104,7 +88,6 @@ namespace WinClient
         {
             try
             {
-                // Reset kết nối cũ nếu có để tránh lỗi khi đổi tài khoản
                 SocketClient.Close(); 
 
                 if (!SocketClient.Connect())
@@ -118,7 +101,7 @@ namespace WinClient
 
                 if (string.IsNullOrEmpty(u) || string.IsNullOrEmpty(p))
                 {
-                    lblMsg.Text = "Vui lòng nhập đủ thông tin.";
+                    lblMsg.Text = "Nhập đủ thông tin.";
                     return;
                 }
 
@@ -127,20 +110,16 @@ namespace WinClient
 
                 if (response != null && response.StartsWith("LOGIN_SUCCESS"))
                 {
-                    // Response format: LOGIN_SUCCESS|ROLE|FULL_NAME
                     string[] parts = response.Split('|');
                     string role = parts.Length > 1 ? parts[1] : "USER";
-                    string fullName = parts.Length > 2 ? parts[2] : u; 
+                    string fullName = (parts.Length > 2 && !string.IsNullOrWhiteSpace(parts[2])) ? parts[2] : u; 
 
-                    // Mở Form Chính và truyền Role, Username, FullName
                     MainForm main = new MainForm(role, u, fullName);
                     this.Hide();
                     main.ShowDialog();
                     
-                    // Khi MainForm đóng
                     if (main.IsLogout) 
                     {
-                        // Nếu là Đăng Xuất -> Hiện lại Login
                         SocketClient.Close(); 
                         this.Show(); 
                         txtPass.Text = ""; 
@@ -148,7 +127,6 @@ namespace WinClient
                     }
                     else 
                     {
-                        // Nếu là tắt Form (Nút X) -> Thoát luôn app
                         SocketClient.Close();
                         Application.Exit(); 
                     }
@@ -156,7 +134,7 @@ namespace WinClient
                 else
                 {
                     lblMsg.Text = "Sai tài khoản hoặc mật khẩu!";
-                    SocketClient.Close(); // Đóng socket để thử lại sạch sẽ
+                    SocketClient.Close();
                 }
             }
             catch (Exception ex)
