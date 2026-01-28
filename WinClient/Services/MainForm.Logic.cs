@@ -123,8 +123,17 @@ namespace WinClient
                 else
                 {
                     // Main page has 6 columns
-                    if (p.Length >= 6) targetDT.Rows.Add(p[0], p[1], p[2], p[3], p[4], p[5]);
-                    else if (p.Length >= 3) targetDT.Rows.Add(p[0], p[1], p[2], "", "", "");
+                    if (p.Length >= 6)
+                    {
+                        string sdt = string.IsNullOrWhiteSpace(p[3]) ? "Chưa cập nhật" : p[3];
+                        string email = string.IsNullOrWhiteSpace(p[4]) ? "Chưa cập nhật" : p[4];
+                        string subject = string.IsNullOrWhiteSpace(p[5]) ? "Chưa cập nhật" : p[5];
+                        targetDT.Rows.Add(p[0], p[1], p[2], sdt, email, subject);
+                    }
+                    else if (p.Length >= 3)
+                    {
+                        targetDT.Rows.Add(p[0], p[1], p[2], "Chưa cập nhật", "Chưa cập nhật", "Chưa cập nhật");
+                    }
                 }
             }
         }
@@ -142,9 +151,9 @@ namespace WinClient
                     string email = p[0];
                     string name = p[1];
                     string role = p[2];
-                    string contactEmail = p.Length > 3 ? p[3] : "";
-                    string assignedClass = p.Length > 4 ? p[4] : "";
-                    string subject = p.Length > 5 ? p[5] : "";
+                    string contactEmail = p.Length > 3 && !string.IsNullOrWhiteSpace(p[3]) ? p[3] : "Chưa cập nhật";
+                    string assignedClass = p.Length > 4 && !string.IsNullOrWhiteSpace(p[4]) ? p[4] : "Chưa cập nhật";
+                    string subject = p.Length > 5 && !string.IsNullOrWhiteSpace(p[5]) ? p[5] : "Chưa cập nhật";
                     dtStudents.Rows.Add(email, name, role, contactEmail, assignedClass, subject);
                 }
             }
@@ -496,7 +505,6 @@ namespace WinClient
                 // Hide/Update buttons for User mode
                 btnAdd.Visible = false;
                 btnImport.Visible = false;
-                btnUndo.Visible = false;
                 
                 // Reposition visible buttons for better alignment
                 btnUpdate.Text = "SỬA TÀI KHOẢN";
@@ -539,7 +547,6 @@ namespace WinClient
                 // Restore buttons for Student mode
                 btnAdd.Visible = true;
                 btnImport.Visible = true;
-                btnUndo.Visible = true;
                 
                 // Restore original positions
                 int bx = 20, by = btnAdd.Location.Y, gap = 135;
@@ -552,7 +559,6 @@ namespace WinClient
                 btnDelete.Location = new Point(bx + gap * 2, by);
                 btnRefresh.Location = new Point(bx + gap * 3, by);
                 btnImport.Location = new Point(bx + gap * 4, by);
-                btnUndo.Location = new Point(bx + gap * 5, by);
             }
             dgvStudents.DataSource = dtStudents;
             txtID.Enabled = true;
